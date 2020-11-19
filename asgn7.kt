@@ -57,6 +57,13 @@ class PrimV : Value
 {
 	var op: (Any)->Value
 }
-    
+class BoolV : Value
+{
+	var b: Boolean
+}    
 
+class Env
+{
+	var bindings: HashMap<String, Value>
+}
 
