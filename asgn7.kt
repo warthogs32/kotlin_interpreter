@@ -1,69 +1,34 @@
-interface ExprC
-{
-}
-class StringC : ExprC
-{
-	var s: String
-}
-class NumC : ExprC
-{
-    var n: Double
-}
-class IfC : ExprC
-{
-    var a: ExprC
-    var b: ExprC
-    var c: ExprC
-}
-class IdC : ExprC
-{
-	var s: String
-}
-class AppC : ExprC
-{
-	var fn: ExprC 
-	var argmt: ArrayList<ExprC>
-}
-class LamC : ExprC
-{
-	var argmtx: ArrayList<String>
-	var body: ArrayList<ExprC>
-}
+interface ExprC {}
 
-interface Value
-{
-}
-class StringV : Value
-{
-	var s: String
-}
-class NumV : Value
-{
-    var n: Double
-}
-}
-class LamV : Value
-{
-	var argmtx: ArrayList<String>
-	var body: ArrayList<ExprC>
-}
-class CloV : Value
-{
-	var param: ArrayList<String>
-    var body: ExprC
-	var CloEnv: HashMap<String, Value>
-}
-class PrimV : Value
-{
-	var op: (Any)->Value
-}
-class BoolV : Value
-{
-	var b: Boolean
-}    
+class StringC (var s: String) : ExprC {}
 
-class Env
-{
-	var bindings: HashMap<String, Value>
-}
+class NumC (var n: Double) : ExprC {}
 
+class IfC (var a: ExprC, var b: ExprC, var c: ExprC) : ExprC {}
+
+class IdC (var s: String) : ExprC {}
+
+class AppC (var fn: ExprC, var argmt: ArrayList<ExprC>) : ExprC {}
+
+class LamC(var arguement: ArrayList<String>, var body: ArrayList<ExprC>) : ExprC {}
+
+interface Value {}
+
+class StringV (var s: String) : Value {}
+
+class NumV (var n: Double) : Value {}
+
+class LamV (var arguement: ArrayList<String>, var body: ArrayList<ExprC>) : Value {}
+
+class CloV (var param: ArrayList<String>, var body: ExprC, var CloEnv: HashMap<String, Value>) : Value {}
+
+class PrimV (var op: (Any)->Value) : Value {}
+
+class BoolV (var b: Boolean) : Value {}    
+
+class Env (var bindings: HashMap<String, Value>) {}
+
+fun main(args: Array<String>) 
+{
+    println("Hello, World!")
+}
