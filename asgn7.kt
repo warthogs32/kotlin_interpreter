@@ -22,7 +22,7 @@ class LamV (var arguement: ArrayList<String>, var body: ArrayList<ExprC>) : Valu
 
 class CloV (var param: ArrayList<String>, var body: ExprC, var CloEnv: HashMap<String, Value>) : Value {}
 
-class PrimV (var op: (Any)->Value) : Value {}
+class PrimV (var op: (Any, Any)->Value) : Value {}
 
 class BoolV (var b: Boolean) : Value {}    
 
@@ -44,11 +44,20 @@ fun interp(expression: ExprC, environment: Env): Value
 					if (condition is BoolV) 
 						{if (condition.b) {return interp(expression.b, environment)} else {return interp(expression.c, environment)}} else {throw Exception("DXUQ: IfC does not contain a conditional")}
 		}
+		is AppC -> {
+			var funval = interp(expression.fn, environment)
+			var argval =  expression.argmt.forEach(interp(it, environment))
+			when (funval) {
+				is PrimV -> funval.op(argval[0], argval[1])
+				else -> {throw Exception("interp DXUQ: bad input")}
+			}
+		}
 		else -> {throw Exception("interp DXUQ: bad input")}
 	}
 }
 
 fun main(args: Array<String>) 
 {
+	var top-env: Env = Env(hashMapOf("+" to PrimV({a: NumV, b: NumV -> NumV((a.n as Double) + (b.n as Double))}), "-" to PrimV({a: NumV, b: NumV -> NumV(a.n - b.n)}), "/" to PrimV({a: NumV, b: NumV -> NumV(a.n / b.n)}), "*" to PrimV({a: NumV, b: NumV -> NumV(a.n * b.n)})))
     println("Hello, World!")
 }
