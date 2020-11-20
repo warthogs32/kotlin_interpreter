@@ -8,23 +8,44 @@ class IfC (var a: ExprC, var b: ExprC, var c: ExprC) : ExprC {}
 
 class IdC (var s: String) : ExprC {}
 
-class AppC (var fn: ExprC, var argmt: ArrayList<ExprC>) : ExprC {}
+class AppC (var fn: ExprC, var argmt: Array<ExprC>) : ExprC {}
 
-class LamC(var arguement: ArrayList<String>, var body: ExprC) : ExprC {}
+class LamC(var arguement: Array<String>, var body: ExprC) : ExprC {}
 
 interface Value {}
 
-class StringV (var s: String) : Value {}
+class StringV (var s: String) : Value {
+	override fun equals(other: Any?): Boolean {
+		if (other is StringV) {
+			return other.s == this.s
+		}
+		return false
+	}
+}
 
-class NumV (var n: Double) : Value {}
+class NumV (var n: Double) : Value {
+	override fun equals(other: Any?): Boolean {
+		if (other is NumV) {
+			return other.n == this.n
+		}
+		return false
+	}
+}
 
-class LamV (var arguement: ArrayList<String>, var body: ArrayList<ExprC>) : Value {}
+class LamV (var arguement: Array<String>, var body: Array<ExprC>) : Value {}
 
-class CloV (var param: ArrayList<String>, var body: ExprC, var CloEnv: HashMap<String, Value>) : Value {}
+class CloV (var param: Array<String>, var body: ExprC, var CloEnv: HashMap<String, Value>) : Value {}
 
-class PrimV (var op: (Any, Any)->Value) : Value {}
+class PrimV (var op: (Value, Value)->Value) : Value {}
 
-class BoolV (var b: Boolean) : Value {}    
+class BoolV (var b: Boolean) : Value {
+	override fun equals(other: Any?): Boolean {
+		if (other is BoolV) {
+			return other.b == this.b
+		}
+		return false
+	}
+}
 
 class Env (var bindings: HashMap<String, Value>) {}
 
@@ -46,9 +67,14 @@ fun interp(expression: ExprC, environment: Env): Value
 		}
 		is AppC -> {
 			var funval = interp(expression.fn, environment)
-			var argval =  expression.argmt.forEach(interp(it, environment))
+			var args = expression.argmt.map{interp(it, environment)}
 			when (funval) {
-				is PrimV -> funval.op(argval[0], argval[1])
+				is PrimV -> return funval.op(args[0], args[1])
+				is CloV -> {
+					environment.bindings.putAll(funval.param.zip(args).toMap())
+					println(environment.bindings.entries)
+					return interp(funval.body, environment)
+				}
 				else -> {throw Exception("interp DXUQ: bad input")}
 			}
 		}
@@ -58,6 +84,24 @@ fun interp(expression: ExprC, environment: Env): Value
 
 fun main(args: Array<String>) 
 {
-	var top-env: Env = Env(hashMapOf("+" to PrimV({a: NumV, b: NumV -> NumV((a.n as Double) + (b.n as Double))}), "-" to PrimV({a: NumV, b: NumV -> NumV(a.n - b.n)}), "/" to PrimV({a: NumV, b: NumV -> NumV(a.n / b.n)}), "*" to PrimV({a: NumV, b: NumV -> NumV(a.n * b.n)})))
-    println("Hello, World!")
+	var topEnv = Env(hashMapOf("+" to PrimV({a: Value, b: Value -> NumV((a as NumV).n + (b as NumV).n)}),
+			"-" to PrimV({a: Value, b: Value -> NumV((a as NumV).n - (b as NumV).n)}),
+			"/" to PrimV({a: Value, b: Value -> NumV((a as NumV).n / (b as NumV).n)}),
+			"*" to PrimV({a: Value, b: Value -> NumV((a as NumV).n * (b as NumV).n)}),
+			"<=" to PrimV({a : Value, b : Value -> BoolV((a as NumV).n <= (b as NumV).n)}),
+			"equal?" to PrimV({a : Value, b : Value -> BoolV(a == b)}),
+			"true" to BoolV(true),
+			"false" to BoolV(false)))
+
+	println(((interp(NumC(1.0), topEnv)) as NumV).n)
+	println(((interp(AppC(IdC("+"), arrayOf<ExprC>(NumC(1.0), NumC(2.0))), topEnv)) as NumV).n)
+	println(((interp(AppC(IdC("<="), arrayOf<ExprC>(NumC(1.0), NumC(2.0))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("<="), arrayOf<ExprC>(NumC(3.0), NumC(2.0))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("equal?"), arrayOf<ExprC>(NumC(3.0), NumC(2.0))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("equal?"), arrayOf<ExprC>(NumC(2.0), NumC(2.0))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("equal?"), arrayOf<ExprC>(NumC(2.0), NumC(1.0))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("equal?"), arrayOf<ExprC>(IdC("true"), IdC("true"))), topEnv)) as BoolV).b)
+	println(((interp(AppC(IdC("equal?"), arrayOf<ExprC>(IdC("true"), NumC(1.0))), topEnv)) as BoolV).b)
+
+	println(((interp(AppC(LamC(arrayOf("x", "y"), AppC(IdC("+"), arrayOf<ExprC>(IdC("x"), IdC("y")))), arrayOf<ExprC>(NumC(2.0), NumC(1.0))), topEnv)) as NumV).n)
 }
