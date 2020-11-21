@@ -1,0 +1,1 @@
+class NumC (var n: Double) : ExprC {}

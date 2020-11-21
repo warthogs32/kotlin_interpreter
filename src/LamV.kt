@@ -1,0 +1,1 @@
+class LamV (var arguement: Array<String>, var body: Array<ExprC>) : Procedure {}
